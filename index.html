@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>時間助手</title>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 font-sans">
+
+<div class="max-w-md mx-auto bg-white min-h-screen p-4">
+
+<!-- HOME -->
+<div id="home">
+  <h1 class="text-2xl font-bold mb-4">時間助手</h1>
+
+  <button onclick="goTo('reminders')" class="w-full mb-2 p-3 bg-blue-500 text-white rounded">提醒</button>
+  <button onclick="goTo('meds')" class="w-full p-3 bg-green-500 text-white rounded">藥物</button>
+</div>
+
+<!-- REMINDERS -->
+<div id="reminders" class="hidden">
+  <h2 class="text-xl font-bold mb-3">提醒事項</h2>
+
+  <div id="reminders-list" class="space-y-2 mb-4"></div>
+
+  <input id="new-title" class="border p-2 w-full mb-2" placeholder="事項名稱">
+  <input id="new-date" type="date" class="border p-2 w-full mb-2">
+  <input id="new-time" type="time" class="border p-2 w-full mb-2">
+  <input id="new-place" class="border p-2 w-full mb-2" placeholder="地點">
+
+  <button onclick="addReminder()" class="w-full bg-blue-500 text-white p-2 rounded mb-2">新增</button>
+  <button onclick="goTo('home')" class="w-full bg-gray-300 p-2 rounded">返回</button>
+</div>
+
+<!-- MEDS -->
+<div id="meds" class="hidden">
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="text-xl font-bold">
+      午安，<span id="client-name">先生</span>
+    </h2>
+    <button onclick="editClientName()">✏️</button>
+  </div>
+
+  <div id="med-list" class="space-y-2 mb-4"></div>
+
+  <button onclick="addMed()" class="w-full bg-green-500 text-white p-2 rounded mb-2">新增藥物</button>
+  <button onclick="goTo('home')" class="w-full bg-gray-300 p-2 rounded">返回</button>
+</div>
+
+</div>
+
+<script>
+// NAVIGATION
+function goTo(page) {
+  ["home","reminders","meds"].forEach(id=>{
+    document.getElementById(id).classList.add("hidden");
+  });
+  document.getElementById(page).classList.remove("hidden");
+}
+
+// ================= REMINDERS =================
+let reminders = JSON.parse(localStorage.getItem("reminders") || "[]");
+
+function saveReminders() {
+  localStorage.setItem("reminders", JSON.stringify(reminders));
+}
+
+function renderReminders() {
+  const list = document.getElementById("reminders-list");
+  list.innerHTML = "";
+
+  reminders.forEach((r, i)=>{
+    const div = document.createElement("div");
+    div.className = "p-3 bg-gray-100 rounded flex justify-between";
+
+    div.innerHTML = `
+      <div>
+        <div class="font-bold">${r.title}</div>
+        <div class="text-sm">${r.date} ${r.time}</div>
+      </div>
+      <div>
+        <button onclick="editReminder(${i})">✏️</button>
+        <button onclick="deleteReminder(${i})">🗑️</button>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function addReminder() {
+  const title = document.getElementById("new-title").value;
+  const date = document.getElementById("new-date").value;
+  const time = document.getElementById("new-time").value;
+  const place = document.getElementById("new-place").value;
+
+  if (!title) return alert("請輸入名稱");
+
+  reminders.push({title,date,time,place});
+  saveReminders();
+  renderReminders();
+}
+
+function deleteReminder(i){
+  reminders.splice(i,1);
+  saveReminders();
+  renderReminders();
+}
+
+function editReminder(i){
+  const r = reminders[i];
+  const title = prompt("修改事項", r.title);
+  if (!title) return;
+
+  r.title = title;
+  saveReminders();
+  renderReminders();
+}
+
+// ================= MEDS =================
+let meds = JSON.parse(localStorage.getItem("meds") || "[]");
+
+function saveMeds(){
+  localStorage.setItem("meds", JSON.stringify(meds));
+}
+
+function renderMeds(){
+  const list = document.getElementById("med-list");
+  list.innerHTML = "";
+
+  meds.forEach((m,i)=>{
+    const div = document.createElement("div");
+    div.className = "p-3 bg-gray-100 rounded flex justify-between";
+
+    div.innerHTML = `
+      <div>
+        <div class="font-bold">${m.name}</div>
+        <div class="text-sm">${m.time} | ${m.dose}</div>
+      </div>
+      <div>
+        <button onclick="editMed(${i})">✏️</button>
+        <button onclick="deleteMed(${i})">🗑️</button>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function addMed(){
+  const name = prompt("藥物名稱");
+  if (!name) return;
+
+  const time = prompt("時間");
+  const dose = prompt("劑量");
+
+  meds.push({name,time,dose});
+  saveMeds();
+  renderMeds();
+}
+
+function editMed(i){
+  const m = meds[i];
+  const name = prompt("名稱", m.name);
+  if (!name) return;
+
+  const time = prompt("時間", m.time);
+  const dose = prompt("劑量", m.dose);
+
+  meds[i] = {name,time,dose};
+  saveMeds();
+  renderMeds();
+}
+
+function deleteMed(i){
+  meds.splice(i,1);
+  saveMeds();
+  renderMeds();
+}
+
+// ================= CLIENT NAME =================
+let clientName = localStorage.getItem("clientName") || "先生";
+
+function renderClientName(){
+  document.getElementById("client-name").innerText = clientName;
+}
+
+function editClientName(){
+  const name = prompt("請輸入稱呼", clientName);
+  if (!name) return;
+
+  clientName = name;
+  localStorage.setItem("clientName", name);
+  renderClientName();
+}
+
+// INIT
+window.onload = ()=>{
+  renderReminders();
+  renderMeds();
+  renderClientName();
+}
+</script>
+
+</body>
+</html>

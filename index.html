@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,viewport-fit=cover"/>
+<meta name="theme-color" content="#8B5000"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="時間助手"/>
+<title>時間助手</title>
+<link rel="manifest" href="./manifest.json"/>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@400..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+/* ═══════════ TOKENS ═══════════ */
+:root{
+  --fs:16px; --msg-fs:1rem;
+  --c-primary:#8B5000; --c-primary-dark:#5C3400;
+  --c-primary-container:#FFDCBE; --c-on-primary:#fff;
+  --c-surface:#FFFBF7; --c-surface-low:#FDF8F1;
+  --c-surface-mid:#FBF2E3; --c-surface-high:#F6EDDE;
+  --c-surface-highest:#F1E0D0;
+  --c-on-surface:#201B16; --c-on-surface-v:#524436;
+  --c-outline:#847465; --c-outline-v:#D6C3B1;
+  --c-error:#BA1A1A; --c-error-bg:#ffdad6;
+  --c-tertiary:#7A5900; --c-tertiary-bg:#FFDF9E;
+  --radius-card:1.75rem; --radius-full:999px;
+  --shadow-card:0 8px 32px rgba(139,80,0,.08);
+  --shadow-float:0 16px 48px rgba(0,0,0,.2);
+}
+/* ═══════════ RESET ═══════════ */
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0;}
+html{font-size:var(--fs);}
+body{font-family:'Public Sans','Microsoft JhengHei','PingFang TC',sans-serif;background:var(--c-surface);color:var(--c-on-surface);min-height:100dvh;overflow-x:hidden;}
+/* ═══════════ SCREENS ═══════════ */
+.screen{display:none;min-height:100dvh;flex-direction:column;}
+.screen.active{display:flex;}
+/* ═══════════ MATERIAL ICONS ═══════════ */
+.mi{font-family:'Material Symbols Outlined';font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 48;font-size:1.6rem;line-height:1;vertical-align:middle;user-select:none;display:inline-block;}
+.mi.fill{font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 48;}
+.mi.sm{font-size:1.3rem;} .mi.lg{font-size:2.2rem;} .mi.xl{font-size:3rem;}
+/* ═══════════ TOPBAR ═══════════ */
+.topbar{position:sticky;top:0;z-index:40;background:rgba(255,251,247,.96);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem;height:3.75rem;border-bottom:1px solid rgba(214,195,177,.3);flex-shrink:0;}
+.topbar h1{font-size:1.15rem;font-weight:700;color:var(--c-primary);}
+.font-btns{display:flex;gap:.4rem;}
+.font-btn{width:2.4rem;height:2.4rem;border-radius:50%;background:var(--c-primary-container);color:var(--c-primary);border:none;font-size:1.1rem;font-weight:900;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s,background .15s;}
+.font-btn:active{transform:scale(.88);background:var(--c-surface-high);}
+/* ═══════════ BOTTOM NAV ═══════════ */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:50;background:rgba(255,251,247,.96);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(214,195,177,.4);border-radius:1.5rem 1.5rem 0 0;box-shadow:0 -8px 32px rgba(139,80,0,.08);display:flex;justify-content:space-around;align-items:center;padding:.5rem .5rem max(1.25rem, env(safe-area-inset-bottom));}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:.15rem;padding:.5rem .875rem;border-radius:1rem;color:var(--c-outline);font-size:.72rem;font-weight:700;cursor:pointer;border:none;background:none;transition:all .2s;}
+.nav-item.active{background:var(--c-primary-container);color:var(--c-primary);border-radius:1.25rem;}
+.nav-item:active{transform:scale(.93);}
+/* ═══════════ SCROLL CONTENT ═══════════ */
+.scrl{flex:1;overflow-y:auto;padding:1.25rem 1.25rem calc(5.5rem + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch;}
+.scrl::-webkit-scrollbar{display:none;}
+.scrl{-ms-overflow-style:none;scrollbar-width:none;}
+/* ═══════════ BUTTONS ═══════════ */
+.btn{border:none;border-radius:var(--radius-card);font-family:inherit;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;transition:transform .15s,opacity .15s;}
+.btn:active{transform:scale(.97);}
+.btn-p{background:linear-gradient(135deg,#8B5000,#BF7030);color:#fff;}
+.btn-s{background:var(--c-surface-highest);color:var(--c-on-surface);}
+.btn-d{background:var(--c-error-bg);color:var(--c-error);}
+/* ═══════════ CARDS ═══════════ */
+.card{background:#fff;border-radius:var(--radius-card);box-shadow:var(--shadow-card);}
+/* ═══════════ FORM FIELDS ═══════════ */
+.field{background:#fff;border:2px solid var(--c-outline-v);border-radius:1rem;padding:.8rem 1rem;width:100%;font-family:inherit;font-size:1rem;color:var(--c-on-surface);outline:none;transition:border-color .2s;appearance:none;}
+.field:focus{border-color:var(--c-primary);}
+.field::placeholder{color:var(--c-outline);}
+label.lbl{font-size:.85rem;font-weight:700;color:var(--c-on-surface-v);display:block;margin-bottom:.3rem;}
+/* ═══════════ TOGGLE ═══════════ */
+.tog{position:relative;width:3.25rem;height:1.875rem;flex-shrink:0;}
+.tog input{opacity:0;width:0;height:0;position:absolute;}
+.tog-track{position:absolute;inset:0;background:var(--c-outline-v);border-radius:2rem;transition:background .3s;cursor:pointer;}
+.tog input:checked+.tog-track{background:var(--c-primary);}
+.tog-thumb{position:absolute;top:3px;left:3px;width:1.5rem;height:1.5rem;background:#fff;border-radius:50%;transition:transform .3s;pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.2);}
+.tog input:checked~.tog-thumb{transform:translateX(1.375rem);}
+/* ═══════════ SLIDERS ═══════════ */
+.slider{-webkit-appearance:none;width:100%;height:6px;border-radius:3px;background:linear-gradient(to right,var(--c-primary) var(--val,50%),var(--c-outline-v) var(--val,50%));outline:none;cursor:pointer;}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;width:1.5rem;height:1.5rem;border-radius:50%;background:var(--c-primary);box-shadow:0 2px 8px rgba(139,80,0,.4);}
+.slider::-moz-range-thumb{width:1.5rem;height:1.5rem;border-radius:50%;background:var(--c-primary);border:none;box-shadow:0 2px 8px rgba(139,80,0,.4);}
+.font-slider{-webkit-appearance:none;width:100%;height:10px;border-radius:5px;background:linear-gradient(to right,var(--c-primary) var(--prog,66%),var(--c-outline-v) var(--prog,66%));outline:none;cursor:pointer;}
+.font-slider::-webkit-slider-thumb{-webkit-appearance:none;width:2.5rem;height:2.5rem;border-radius:50%;background:var(--c-primary);box-shadow:0 4px 12px rgba(139,80,0,.35);}
+.font-slider::-moz-range-thumb{width:2.5rem;height:2.5rem;border-radius:50%;background:var(--c-primary);border:none;}
+/* ═══════════ MODAL ═══════════ */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:80;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:var(--c-surface);border-radius:2rem 2rem 0 0;padding:1.5rem 1.5rem calc(1.5rem + env(safe-area-inset-bottom));width:100%;max-width:540px;max-height:92dvh;overflow-y:auto;box-shadow:var(--shadow-float);animation:slideUp .3s ease;}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+/* ═══════════ HOME MENU ═══════════ */
+.menu-item{display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;background:#fff;border-radius:1.5rem;cursor:pointer;border:none;width:100%;text-align:left;font-family:inherit;box-shadow:0 4px 16px rgba(139,80,0,.06);transition:all .2s;}
+.menu-item:active{transform:scale(.98);background:var(--c-surface-low);}
+.menu-icon{width:3rem;height:3rem;background:var(--c-surface-mid);border-radius:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+/* ═══════════ DATE CHIP ═══════════ */
+#date-chip{background:var(--c-surface-mid);border-radius:1rem;padding:.7rem 1rem;margin-bottom:.875rem;display:flex;align-items:center;justify-content:space-between;cursor:pointer;border:none;width:100%;font-family:inherit;transition:all .2s;text-align:left;}
+#date-chip:active{transform:scale(.98);background:var(--c-surface-high);}
+/* ═══════════ WEATHER ═══════════ */
+.weather-hero{background:linear-gradient(150deg,#FFB870 0%,#8B5000 100%);border-radius:var(--radius-card);color:#fff;padding:1.5rem;margin-bottom:1rem;}
+/* ═══════════ REMINDER/MED CARD ═══════════ */
+.rem-card{transition:opacity .3s;}
+.rem-card.done{opacity:.42;}
+.rem-card.done .rem-title{text-decoration:line-through;}
+/* ═══════════ NOTIFICATION BADGE ═══════════ */
+.notif-badge{position:absolute;top:-.25rem;right:-.25rem;background:var(--c-error);color:#fff;font-size:.6rem;font-weight:900;min-width:1rem;height:1rem;border-radius:var(--radius-full);display:flex;align-items:center;justify-content:center;padding:0 .2rem;}
+/* ═══════════ INSTALL BANNER ═══════════ */
+#install-banner{display:none;position:fixed;bottom:5.5rem;left:1rem;right:1rem;z-index:60;background:var(--c-primary);color:#fff;border-radius:1.25rem;padding:.875rem 1.25rem;box-shadow:0 8px 32px rgba(0,0,0,.25);align-items:center;gap:.75rem;}
+#install-banner.show{display:flex;}
+/* ═══════════ TOAST ═══════════ */
+#toast{display:none;position:fixed;bottom:calc(5.5rem + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:var(--c-on-surface);color:#fff;padding:.75rem 1.5rem;border-radius:var(--radius-full);font-size:.9rem;font-weight:700;z-index:999;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,.2);transition:opacity .3s;pointer-events:none;}
+/* ═══════════ SPINNER ═══════════ */
+.spinner{width:2rem;height:2rem;border:3px solid var(--c-outline-v);border-top-color:var(--c-primary);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+/* ═══════════ HOLIDAY BADGE ═══════════ */
+.hbadge{font-size:.65rem;font-weight:800;display:block;line-height:1;margin-top:1px;}
+/* ═══════════ ANIMATIONS ═══════════ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.screen.active .scrl > *{animation:fadeUp .28s ease both;}
+.screen.active .scrl > *:nth-child(1){animation-delay:.04s;}
+.screen.active .scrl > *:nth-child(2){animation-delay:.08s;}
+.screen.active .scrl > *:nth-child(3){animation-delay:.12s;}
+.screen.active .scrl > *:nth-child(4){animation-delay:.16s;}
+.screen.active .scrl > *:nth-child(5){animation-delay:.20s;}
+/* ═══════════ QUICK NOTE ═══════════ */
+#quick-note{font-size:var(--msg-fs);}
+/* ═══════════ CALENDAR ═══════════ */
+.cal-cell{padding:.3rem .1rem;text-align:center;font-size:.88rem;font-weight:700;border-radius:.5rem;}
+.cal-hday{background:#80000b;color:#fff;}
+.cal-hday-soft{background:rgba(128,0,11,.12);color:#80000b;border:1px solid rgba(128,0,11,.25);}
+.cal-pday{background:#003396;color:#fff;}
+.cal-pday-soft{background:rgba(0,51,150,.1);color:#003396;border:1px solid rgba(0,51,150,.22);}
+.cal-today{background:#003396;color:#fff;box-shadow:0 3px 10px rgba(0,51,150,.45);transform:scale(1.08);z-index:1;position:relative;}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════ HOME ══════════════════════ -->
+<div id="s-home" class="screen active">
+  <div class="topbar">
+    <span style="font-size:1.3rem;font-weight:900;">時間助手</span>
+    <div style="display:flex;align-items:center;gap:.5rem;">
+      <div style="position:relative;">
+        <button class="nav-item" style="padding:.4rem;" onclick="goTo('s-notif')" id="notif-btn">
+          <span class="mi sm">notifications</span>
+        </button>
+        <span class="notif-badge" id="notif-badge" style="display:none;">0</span>
+      </div>
+      <button style="background:none;border:none;display:flex;align-items:center;color:var(--c-primary);cursor:pointer;" onclick="goTo('s-settings')">
+        <span class="mi sm">settings</span>
+      </button>
+    </div>
+  </div>
+  <div class="scrl" style="padding-top:.75rem;">
+    <div style="margin-bottom:1.25rem;">
+      <h2 id="home-greeting" style="font-size:1.8rem;font-weight:900;color:var(--c-primary);line-height:1.3;">保持心情愉快，<br>天天好心情</h2>
+    </div>
+
+    <!-- Clock card -->
+    <div class="card" style="padding:1.5rem 1.25rem;margin-bottom:1.25rem;">
+      <button id="date-chip" onclick="goTo('s-calendar')">
+        <div>
+          <div id="date-text" style="font-size:1.5rem;font-weight:900;color:var(--c-primary);"></div>
+          <div style="display:flex;align-items:center;gap:.3rem;color:var(--c-on-surface-v);font-size:.88rem;font-weight:700;margin-top:.2rem;">
+            <span class="mi sm" style="font-size:.9rem;color:var(--c-outline);">calendar_month</span>
+            <span id="day-inner"></span>
+          </div>
+        </div>
+        <span class="mi sm" style="color:var(--c-primary);">chevron_right</span>
+      </button>
+      <input type="range" class="slider" id="dt-slider" min="0" max="100" value="50"
+        oninput="onClockSlider(this.value)" style="--val:50%;margin-bottom:.4rem;"/>
+      <div style="display:flex;justify-content:space-between;color:var(--c-outline);font-size:.78rem;font-weight:700;margin-bottom:.875rem;">
+        <span>放大日期</span><span>放大時間</span>
+      </div>
+      <div style="text-align:center;">
+        <span id="ampm-lbl" style="font-size:1.6rem;font-weight:700;"></span>
+        <span id="time-text" style="font-size:2.5rem;font-weight:900;margin-left:.2rem;"></span>
+      </div>
+    </div>
+
+    <!-- Menu -->
+    <div style="display:flex;flex-direction:column;gap:.75rem;margin-bottom:1.5rem;">
+      <button class="menu-item" onclick="goTo('s-weather')">
+        <div class="menu-icon"><span class="mi fill" style="color:var(--c-primary);">cloud</span></div>
+        <div style="flex:1;"><div style="font-size:1.1rem;font-weight:900;">查詢天氣</div><div style="font-size:.88rem;color:var(--c-on-surface-v);font-weight:700;">查看今日氣溫與降雨</div></div>
+        <span class="mi sm" style="color:var(--c-outline);">chevron_right</span>
+      </button>
+      <button class="menu-item" onclick="goTo('s-reminders')">
+        <div class="menu-icon"><span class="mi fill" style="color:var(--c-primary);">event_note</span></div>
+        <div style="flex:1;"><div style="font-size:1.1rem;font-weight:900;">未來提醒</div><div style="font-size:.88rem;color:var(--c-on-surface-v);font-weight:700;">紀錄重要的日子與行程</div></div>
+        <span class="mi sm" style="color:var(--c-outline);">chevron_right</span>
+      </button>
+      <button class="menu-item" onclick="goTo('s-medication')">
+        <div class="menu-icon"><span class="mi fill" style="color:var(--c-primary);">medication</span></div>
+        <div style="flex:1;"><div style="font-size:1.1rem;font-weight:900;">設置服藥提醒</div><div style="font-size:.88rem;color:var(--c-on-surface-v);font-weight:700;">準時用藥，健康生活</div></div>
+        <span class="mi sm" style="color:var(--c-outline);">chevron_right</span>
+      </button>
+      <button class="menu-item" onclick="goTo('s-calendar')">
+        <div class="menu-icon"><span class="mi fill" style="color:var(--c-primary);">celebration</span></div>
+        <div style="flex:1;"><div style="font-size:1.1rem;font-weight:900;">年度節慶</div><div style="font-size:.88rem;color:var(--c-on-surface-v);font-weight:700;">節假日一覽</div></div>
+        <span class="mi sm" style="color:var(--c-outline);">chevron_right</span>
+      </button>
+    </div>
+
+    <!-- Quick note -->
+    <div class="card" style="padding:1.25rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.875rem;">
+        <span style="font-size:1rem;font-weight:900;">快速輸入提醒事項</span>
+        <div style="display:flex;align-items:center;gap:.35rem;">
+          <button class="font-btn" onclick="msgFontDec()" title="縮小輸入字體">－</button>
+          <span style="font-size:.78rem;font-weight:700;color:var(--c-on-surface-v);">輸入字體</span>
+          <button class="font-btn" onclick="msgFontInc()" title="放大輸入字體">＋</button>
+        </div>
+      </div>
+      <textarea class="field" id="quick-note" rows="2" placeholder="請在這裡輸入..." style="resize:none;"></textarea>
+      <div style="display:flex;gap:.75rem;margin-top:.875rem;">
+        <button class="btn btn-s" style="flex:1;padding:.875rem;font-size:1rem;" onclick="S.quickNote='';applyState();document.getElementById('quick-note').value='';">清除</button>
+        <button class="btn btn-p" style="flex:2;padding:.875rem;font-size:1rem;" onclick="saveQuickNote()">完成</button>
+      </div>
+    </div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="goTo('s-home')"><span class="mi fill sm">home</span><span>首頁</span></button>
+    <button class="nav-item" onclick="goTo('s-weather')"><span class="mi sm">cloud</span><span>天氣</span></button>
+    <button class="nav-item" onclick="goTo('s-reminders')" style="position:relative;" id="nav-rem"><span class="mi sm">notifications</span><span>提醒</span></button>
+    <button class="nav-item" onclick="goTo('s-medication')"><span class="mi sm">medication</span><span>藥物</span></button>
+  </nav>
+</div>
+
+
+<!-- ══════════════════════ WEATHER ══════════════════════ -->
+<div id="s-weather" class="screen">
+  <div class="topbar">
+    <button onclick="goBack()" style="background:none;border:none;display:flex;align-items:center;color:var(--c-primary);cursor:pointer;"><span class="mi sm">arrow_back</span></button>
+    <h1>查詢天氣</h1>
+    <div class="font-btns"><button class="font-btn" onclick="fontDec()">－</button><button class="font-btn" onclick="fontInc()">＋</button></div>
+  </div>
+  <div class="scrl">
+    <!-- Location bar -->
+    <div style="display:flex;gap:.75rem;margin-bottom:1rem;">
+      <button class="btn btn-s" style="flex:1;padding:.75rem .875rem;font-size:.9rem;border-radius:1rem;" onclick="fetchWeather(true)">
+        <span class="mi sm">my_location</span>目前位置
+      </button>
+      <div style="flex:2;display:flex;gap:.5rem;">
+        <input type="text" class="field" id="city-input" placeholder="輸入城市名稱…" style="flex:1;padding:.7rem .875rem;border-radius:1rem;font-size:.9rem;"/>
+        <button class="btn btn-p" style="padding:.75rem 1rem;border-radius:1rem;" onclick="fetchWeatherByCity()"><span class="mi sm">search</span></button>
+      </div>
+    </div>
+
+    <div id="weather-loading" style="display:none;justify-content:center;padding:2rem;"><div class="spinner"></div></div>
+    <div id="weather-error" style="display:none;" class="card" style="padding:1.25rem;text-align:center;">
+      <span class="mi lg" style="color:var(--c-error);">error_outline</span>
+      <p id="weather-error-msg" style="font-weight:700;margin-top:.5rem;color:var(--c-error);"></p>
+      <p style="font-size:.85rem;color:var(--c-on-surface-v);margin-top:.25rem;">請在設定中填入 OpenWeather API 金鑰</p>
+    </div>
+    <div id="weather-content" style="display:none;">
+      <!-- Hero -->
+      <div class="weather-hero">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div>
+            <div id="w-city" style="font-size:1rem;font-weight:700;opacity:.9;margin-bottom:.2rem;"></div>
+            <div style="display:flex;align-items:flex-start;line-height:1;">
+              <span id="w-temp" style="font-size:4.5rem;font-weight:900;"></span>
+              <span style="font-size:1.75rem;font-weight:700;margin-top:.5rem;">°C</span>
+            </div>
+            <div id="w-desc" style="font-size:1.5rem;font-weight:900;margin-top:.2rem;"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:.5rem;">
+            <span id="w-icon" class="mi fill xl" style="color:#fff;">wb_sunny</span>
+            <div style="background:rgba(255,255,255,.2);padding:.35rem .875rem;border-radius:999px;border:1px solid rgba(255,255,255,.3);">
+              <span id="w-feels" style="font-size:.88rem;font-weight:900;"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Stats -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;margin-bottom:1rem;">
+        <div class="card" style="padding:.875rem;display:flex;flex-direction:column;align-items:center;gap:.3rem;"><span class="mi sm" style="color:var(--c-primary);">humidity_percentage</span><span style="font-size:.78rem;font-weight:700;color:var(--c-on-surface-v);">濕度</span><span id="w-humidity" style="font-size:1.2rem;font-weight:900;"></span></div>
+        <div class="card" style="padding:.875rem;display:flex;flex-direction:column;align-items:center;gap:.3rem;"><span class="mi sm" style="color:var(--c-primary);">air</span><span style="font-size:.78rem;font-weight:700;color:var(--c-on-surface-v);">風速</span><span id="w-wind" style="font-size:1.2rem;font-weight:900;"></span></div>
+        <div class="card" style="padding:.875rem;display:flex;flex-direction:column;align-items:center;gap:.3rem;"><span class="mi sm" style="color:var(--c-primary);">visibility</span><span style="font-size:.78rem;font-weight:700;color:var(--c-on-surface-v);">能見度</span><span id="w-vis" style="font-size:1.2rem;font-weight:900;"></span></div>
+      </div>
+      <!-- Forecast -->
+      <h2 style="font-size:1.4rem;font-weight:900;margin-bottom:.75rem;">未來預報</h2>
+      <div id="w-forecast" style="display:flex;flex-direction:column;gap:.5rem;margin-bottom:1rem;"></div>
+      <!-- Tip -->
+      <div id="w-tip" style="background:var(--c-tertiary-bg);border-radius:1.5rem;padding:1.1rem;display:flex;gap:.875rem;align-items:flex-start;border-left:8px solid var(--c-tertiary);">
+        <span class="mi fill" style="color:var(--c-tertiary);flex-shrink:0;font-size:2rem;">lightbulb</span>
+        <div><div style="font-size:1rem;font-weight:900;color:#2E1500;margin-bottom:.2rem;">貼心叮嚀</div><div id="w-tip-text" style="font-size:.9rem;font-weight:700;color:#2E1500;line-height:1.6;"></div></div>
+      </div>
+      <div id="w-updated" style="text-align:center;font-size:.75rem;color:var(--c-outline);margin-top:.75rem;"></div>
+    </div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-item" onclick="goTo('s-home')"><span class="mi sm">home</span><span>首頁</span></button>
+    <button class="nav-item active" onclick="goTo('s-weather')"><span class="mi fill sm">cloud</span><span>天氣</span></button>
+    <button class="nav-item" onclick="goTo('s-reminders')"><span class="mi sm">notifications</span><span>提醒</span></button>
+    <button class="nav-item" onclick="goTo('s-medication')"><span class="mi sm">medication</span><span>藥物</span></button>
+  </nav>
+</div>
+
+
+<!-- ══════════════════════ REMINDERS ══════════════════════ -->
+<div id="s-reminders" class="screen">
+  <div class="topbar">
+    <button onclick="goBack()" style="background:none;border:none;display:flex;align-items:center;color:var(--c-primary);cursor:pointer;"><span class="mi sm">arrow_back</span></button>
+    <h1>未來提醒</h1>
+    <div class="font-btns"><button class="font-btn" onclick="fontDec()">－</button><button class="font-btn" onclick="fontInc()">＋</button></div>
+  </div>
+  <div class="scrl">
+    <div style="margin-bottom:1.25rem;">
+      <h2 style="font-size:1.9rem;font-weight:900;margin-bottom:.25rem;">未來提醒</h2>
+      <p style="color:var(--c-on-surface-v);font-size:.95rem;font-weight:700;">您的貼心生活管家，記錄每一件重要的事情。</p>
+    </div>
+    <div id="rem-list" style="display:flex;flex-direction:column;gap:1rem;"></div>
+    <div style="margin-top:1.25rem;">
+      <button class="btn btn-p" style="width:100%;padding:1.1rem;font-size:1.1rem;" id="add-rem-btn" onclick="openItemModal('reminder')">
+        <span class="mi lg">add_circle</span>新增提醒事項
+      </button>
+    </div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-item" onclick="goTo('s-home')"><span class="mi sm">home</span><span>首頁</span></button>
+    <button class="nav-item" onclick="goTo('s-weather')"><span class="mi sm">cloud</span><span>天氣</span></button>
+    <button class="nav-item active" onclick="goTo('s-reminders')"><span class="mi fill sm">notifications</span><span>提醒</span></button>
+    <button class="nav-item" onclick="goTo('s-medication')"><span class="mi sm">medication</span><span>藥物</span></button>
+  </nav>
+</div>
+
+
+<!-- ══════════════════════ MEDICATION ══════════════════════ -->
+<div id="s-medication" class="screen">
+  <div class="topbar">
+    <button onclick="goBack()" style="background:none;border:none;display:flex;align-items:center;color:var(--c-primary);cursor:pointer;"><span class="mi sm">arrow_back</span></button>
+    <h1>服藥管理</h1>
+    <div class="font-btns"><button class="font-btn" onclick="fontDec()">－</button><button class="font-btn" onclick="fontInc()">＋</button></div>
+  </div>
+  <div class="scrl">
+    <!-- Chrono greeting -->
+    <div class="card" style="padding:1.1rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem;">
+      <div style="display:flex;align-items:center;gap:.875rem;flex:1;">
+        <div style="width:2.75rem;height:2.75rem;background:var(--c-surface-mid);border-radius:1rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <span class="mi fill" id="tod-icon" style="color:#FF8C00;font-size:1.6rem;">wb_twilight</span>
+        </div>
+        <div>
+          <div id="med-greeting" style="font-size:1.1rem;font-weight:900;"></div>
+          <div id="med-count" style="font-size:.88rem;font-weight:700;color:var(--c-on-surface-v);"></div>
+        </div>
+      </div>
+      <!-- Chrono toggle -->
+      <div style="display:flex;gap:.3rem;background:var(--c-surface-mid);padding:.3rem;border-radius:999px;">
+        <button class="chrono-btn" onclick="setTOD('morning',this)" data-tod="morning" style="width:2.2rem;height:2.2rem;border-radius:50%;border:none;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;">
+          <span class="mi" style="font-size:1.25rem;color:var(--c-outline);">wb_sunny</span>
+        </button>
+        <button class="chrono-btn" onclick="setTOD('afternoon',this)" data-tod="afternoon" style="width:2.2rem;height:2.2rem;border-radius:50%;border:none;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;">
+          <span class="mi fill" style="font-size:1.25rem;color:#FF8C00;">wb_twilight</span>
+        </button>
+        <button class="chrono-btn" onclick="setTOD('evening',this)" data-tod="evening" style="width:2.2rem;height:2.2rem;border-radius:50%;border:none;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;">
+          <span class="mi" style="font-size:1.25rem;color:var(--c-outline);">dark_mode</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="med-list" style="display:flex;flex-direction:column;gap:1rem;"></div>
+
+    <!-- Add button -->
+    <div style="margin-top:1.25rem;">
+      <button class="btn btn-p" style="width:100%;padding:1.1rem;font-size:1.1rem;" onclick="openItemModal('medication')">
+        <span class="mi lg">add_circle</span>新增服藥提醒
+      </button>
+    </div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-item" onclick="goTo('s-home')"><span class="mi sm">home</span><span>首頁</span></button>
+    <button class="nav-item" onclick="goTo('s-weather')"><span class="mi sm">cloud</span><span>天氣</span></button>
+    <button class="nav-item" onclick="goTo('s-reminders')"><span class="mi sm">notifications</span><span>提醒</span></button>
+    <button class="nav-item active" onclick="goTo('s-medication')"><span class="mi fill sm">medication</span><span>藥物</span></button>
+  </nav>
+</div>
+
+
+<!-- ══════════════════════ SETTINGS ══════════════════════ -->
+<div id="s-settings" class="screen">
+  <div class="topbar">
+    <button onclick="goBack()" style="background:none;border:none;display:flex;align-items:center;color:var(--c-primary);cursor:pointer;"><span class="mi sm">arrow_back</span></button>
+    <h1>設定中心</h1>
+    <div class="font-btns"><button class="font-btn" onclick="fontDec()">－</button><button class="font-btn" onclick="fontInc()">＋</button></div>
+  </div>
+  <div class="scrl">
+    <div style="margin-bottom:1.5rem;"><h2 style="font-size:1.7rem;font-weight:900;margin-bottom:.2rem;">設定中心</h2><p style="color:var(--c-on-surface-v);font-weight:700;">調整最適合您的使用方式</p></div>
+
+    <!-- API Key -->
+    <div class="card" style="padding:1.25rem;margin-bottom:1rem;">
+      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.875rem;"><span class="mi" style="color:var(--c-primary);">vpn_key</span><span style="font-size:1.05rem;font-weight:900;">OpenWeather API 金鑰</span></div>
+      <input type="text" class="field" id="api-key-input" placeholder="貼上您的 API 金鑰…" style="margin-bottom:.75rem;font-size:.9rem;"/>
+      <button class="btn btn-p" style="width:100%;padding:.875rem;" onclick="saveApiKey()"><span class="mi sm">save</span>儲存金鑰</button>
+      <p style="font-size:.8rem;color:var(--c-on-surface-v);margin-top:.75rem;line-height:1.5;">免費申請：<a href="https://openweathermap.org/api" target="_blank" style="color:var(--c-primary);font-weight:700;">openweathermap.org</a><br/>選擇 「Current Weather」免費方案即可。</p>
+    </div>
+
+    <!-- Name -->
+    <div class="card" style="padding:1.25rem;margin-bottom:1rem;">
+      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.875rem;"><span class="mi" style="color:var(--c-primary);">person</span><span style="font-size:1.05rem;font-weight:900;">稱呼設定</span></div>
+      <input type="text" class="field" id="name-input" placeholder="例如：張先生" style="margin-bottom:.75rem;"/>
+      <button class="btn btn-p" style="width:100%;padding:.875rem;" onclick="saveName()"><span class="mi sm">save</span>儲存稱呼</button>
+    </div>
+
+    <!-- Language -->
+    <div class="card" style="padding:1.25rem;margin-bottom:1rem;">
+      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.875rem;"><span class="mi" style="color:var(--c-primary);">language</span><span style="font-size:1.05rem;font-weight:900;">語言選擇</span></div>
+      <div id="lang-opts" style="display:flex;flex-direction:column;gap:.5rem;">
+        <button class="lang-opt" onclick="selLang(this,'zh')" style="width:100%;display:flex;justify-content:space-between;align-items:center;padding:.875rem 1.1rem;border-radius:1rem;border:2px solid var(--c-primary);background:#fff;font-size:1rem;font-weight:700;color:var(--c-primary);cursor:pointer;"><span>繁體中文</span><span class="mi fill sm" style="color:var(--c-primary);">check_circle</span></button>
+        <button class="lang-opt" onclick="selLang(this,'en')" style="width:100%;display:flex;justify-content:space-between;align-items:center;padding:.875rem 1.1rem;border-radius:1rem;border:2px solid transparent;background:var(--c-surface-low);font-size:1rem;font-weight:700;color:var(--c-on-surface);cursor:pointer;"><span>English</span></button>
+      </div>
+    </div>
+
+    <!-- Font Size -->
+    <div class="card" style="padding:1.25rem;margin-bottom:1rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <div style="display:flex;align-items:center;gap:.75rem;"><span class="mi" style="color:var(--c-primary);">text_fields</span><span style="font-size:1.05rem;font-weight:900;">字體大小</span></div>
+        <span id="font-lbl" style="font-size:1rem;font-weight:900;color:var(--c-primary);">超大</span>
+      </div>
+      <input type="range" class="font-slider" id="font-range" min="1" max="4" value="3" oninput="onFontRange(this.value)" style="--prog:66%;"/>
+      <div style="display:flex;justify-content:space-between;margin-top:.75rem;color:var(--c-on-surface-v);font-size:.82rem;font-weight:700;">
+        <span>標準</span><span>較大</span><span>超大</span><span>巨大</span>
+      </div>
+      <div style="margin-top:.875rem;padding:.875rem;background:var(--c-surface-mid);border-radius:1rem;border:2px dashed var(--c-outline-v);text-align:center;">
+        <p style="font-weight:700;" id="font-preview">預覽：今天的健康提醒已經發送。</p>
+      </div>
+    </div>
+
+    <!-- High Contrast -->
+    <div style="background:linear-gradient(135deg,#8B5000,#BF7030);border-radius:2rem;padding:1.25rem;margin-bottom:1rem;color:#fff;">
+      <span class="mi lg" style="margin-bottom:.5rem;display:block;">contrast</span>
+      <h3 style="font-size:1.2rem;font-weight:900;margin-bottom:.4rem;">高對比度</h3>
+      <p style="font-size:.9rem;font-weight:700;opacity:.9;margin-bottom:.875rem;">讓文字與背景更清晰。</p>
+      <button id="contrast-btn" onclick="toggleContrast(this)" style="background:#fff;color:var(--c-primary);border:none;width:100%;padding:.875rem;border-radius:1rem;font-size:1rem;font-weight:900;display:flex;align-items:center;justify-content:center;gap:.5rem;cursor:pointer;">
+        <span>立即開啟</span><span class="mi sm">toggle_off</span>
+      </button>
+    </div>
+
+    <!-- Notifications -->
+    <div class="card" style="padding:1.25rem;margin-bottom:1rem;">
+      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.875rem;"><span class="mi" style="color:var(--c-primary);">notifications_active</span><span style="font-size:1.05rem;font-weight:900;">推播通知</span></div>
+      <button class="btn btn-p" style="width:100%;padding:.875rem;" onclick="requestNotifPerm()">
+        <span class="mi sm">notifications_active</span>開啟提醒通知
+      </button>
+      <p id="notif-status" style="font-size:.82rem;color:var(--c-on-surface-v);margin-top:.6rem;text-align:center;"></p>
+    </div>
+
+    <!-- Clear data -->
+    <div class="card" style="padding:1.25rem;margin-bottom:1rem;border:2px solid rgba(186,26,26,.2);">
+      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.875rem;"><span class="mi" style="color:var(--c-error);">delete_forever</span><span style="font-size:1.05rem;font-weight:900;color:var(--c-error);">清除所有資料</span></div>
+      <button class="btn btn-d" style="width:100%;padding:.875rem;" onclick="confirmClear()">清除並重置</button>
+    </div>
+
+    <button class="btn btn-p" style="width:100%;padding:1.1rem;font-size:1.1rem;" onclick="saveSettings()">
+      <span class="mi sm">save</span>儲存所有設定
+    </button>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-item" onclick="goTo('s-home')"><span class="mi sm">home</span><span>首頁</span></button>
+    <button class="nav-item" onclick="goTo('s-weather')"><span class="mi sm">cloud</span><span>天氣</span></button>
+    <button class="nav-item" onclick="goTo('s-reminders')"><span class="mi sm">notifications</span><span>提醒</span></button>
+    <button class="nav-item" onclick="goTo('s-medication')"><span class="mi sm">medication</span><span>藥物</span></button>
+  </nav>
+</div>
+
+
+<!-- ══════════════════════ NOTIFICATIONS LIST ══════════════════════ -->
+<div id="s-notif" class="screen">
+  <div class="topbar">
+    <button onclick="goBack()" style="background:none;border:none;display:flex;align-items:center;color:var(--c-primary);cursor:pointer;"><span class="mi sm">arrow_back</span></button>
+    <h1>即將到來的提醒</h1>
+    <button onclick="clearAllNotifs()" style="background:none;border:none;color:var(--c-error);font-size:.82rem;font-weight:700;cursor:pointer;">全部清除</button>
+  </div>
+  <div class="scrl">
+    <div id="notif-list"></div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-item" onclick="goTo('s-home')"><span class="mi sm">home</span><span>首頁</span></button>
+    <button class="nav-item" onclick="goTo('s-weather')"><span class="mi sm">cloud</span><span>天氣</span></button>
+    <button class="nav-item" onclick="goTo('s-reminders')"><span class="mi sm">notifications</span><span>提醒</span></button>
+    <button class="nav-item" onclick="goTo('s-medication')"><span class="mi sm">medication</span><span>藥物</span></button>
+  </nav>
+</div>
+
+
+<!-- ══════════════════════ CALENDAR ══════════════════════ -->
+<div id="s-calendar" class="screen" style="background:#fffaf0;">
+  <div class="topbar" style="background:rgba(249,249,252,.97);">
+    <div style="display:flex;align-items:center;gap:.5rem;">
+      <button onclick="goBack()" style="background:none;border:none;display:flex;align-items:center;color:#003396;cursor:pointer;"><span class="mi sm" style="color:#003396;">arrow_back</span></button>
+      <span class="mi" style="color:#003396;font-size:1.5rem;">calendar_today</span>
+      <span style="font-size:1.1rem;font-weight:900;color:#003396;">年度節慶</span>
+    </div>
+    <div class="font-btns">
+      <button class="font-btn" onclick="fontDec()" style="background:#dce1ff;color:#003396;">－</button>
+      <button class="font-btn" onclick="fontInc()" style="background:#dce1ff;color:#003396;">＋</button>
+    </div>
+  </div>
+  <div class="scrl" style="background:#fffaf0;">
+    <section style="margin-bottom:1.25rem;">
+      <span style="color:#80000b;font-weight:900;font-size:1.05rem;letter-spacing:.1em;">2025 乙巳年</span>
+      <h2 style="font-size:2.75rem;font-weight:900;color:#1a1c1e;line-height:1.1;margin:.25rem 0;">蛇年吉祥</h2>
+      <div id="cal-today-box" style="background:rgba(0,51,150,.08);padding:.875rem 1.1rem;border-radius:1.25rem;border-left:8px solid #003396;"></div>
+    </section>
+    <section style="background:white;border-radius:2rem;padding:1.25rem;border:2px solid rgba(0,51,150,.1);box-shadow:0 4px 20px rgba(0,51,150,.07);margin-bottom:1.25rem;">
+      <h3 style="font-size:1.25rem;font-weight:900;margin-bottom:1rem;color:#003396;display:flex;align-items:center;gap:.5rem;"><span class="mi sm" style="color:#003396;">event_note</span>2025 重要節慶</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+        <div style="padding:.875rem;background:rgba(128,0,11,.05);border-radius:1rem;border:2px solid rgba(128,0,11,.2);"><p style="color:#80000b;font-weight:900;font-size:.9rem;">農曆新年</p><p style="font-weight:700;font-size:.95rem;">1月29日</p></div>
+        <div style="padding:.875rem;background:rgba(0,51,150,.05);border-radius:1rem;border:2px solid rgba(0,51,150,.2);"><p style="color:#003396;font-weight:900;font-size:.9rem;">清明節</p><p style="font-weight:700;font-size:.95rem;">4月4日</p></div>
+        <div style="padding:.875rem;background:rgba(128,0,11,.05);border-radius:1rem;border:2px solid rgba(128,0,11,.2);"><p style="color:#80000b;font-weight:900;font-size:.9rem;">端午節</p><p style="font-weight:700;font-size:.95rem;">5月31日</p></div>
+        <div style="padding:.875rem;background:rgba(0,51,150,.05);border-radius:1rem;border:2px solid rgba(0,51,150,.2);"><p style="color:#003396;font-weight:900;font-size:.9rem;">中秋節</p><p style="font-weight:700;font-size:.95rem;">10月6日</p></div>
+        <div style="padding:.875rem;background:rgba(128,0,11,.05);border-radius:1rem;border:2px solid rgba(128,0,11,.2);"><p style="color:#80000b;font-weight:900;font-size:.9rem;">重陽節</p><p style="font-weight:700;font-size:.95rem;">10月29日</p></div>
+        <div style="padding:.875rem;background:rgba(0,51,150,.05);border-radius:1rem;border:2px solid rgba(0,51,150,.2);"><p style="color:#003396;font-weight:900;font-size:.9rem;">冬至</p><p style="font-weight:700;font-size:.95rem;">12月22日</p></div>
+      </div>
+    </section>
+    <div id="cal-months"></div>
+  </div>
+  <nav class="bottom-nav">
+    <button class="nav-item" onclick="goTo('s-home')"><span class="mi sm">home</span><span>首頁</span></button>
+    <button class="nav-item" onclick="goTo('s-weather')"><span class="mi sm">cloud</span><span>天氣</span></button>
+    <button class="nav-item" onclick="goTo('s-reminders')"><span class="mi sm">notifications</span><span>提醒</span></button>
+    <button class="nav-item" onclick="goTo('s-medication')"><span class="mi sm">medication</span><span>藥物</span></button>
+  </nav>
+</div>
+
+
+<!-- ══════════════════════ ADD/EDIT ITEM MODAL ══════════════════════ -->
+<div class="modal-overlay" id="item-modal">
+  <div class="modal-box">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+      <h3 id="modal-title" style="font-size:1.25rem;font-weight:900;display:flex;align-items:center;gap:.5rem;"></h3>
+      <button onclick="closeModal()" style="background:none;border:none;cursor:pointer;color:var(--c-outline);"><span class="mi sm">close</span></button>
+    </div>
+    <input type="hidden" id="modal-mode"/>
+    <input type="hidden" id="modal-id"/>
+    <div style="display:flex;flex-direction:column;gap:.875rem;">
+      <div><label class="lbl">📅 日期</label><input type="date" id="m-date" class="field"/></div>
+      <div id="m-time-wrap"><label class="lbl">⏰ 時間</label><input type="time" id="m-time" class="field"/></div>
+      <div id="m-title-wrap"><label class="lbl" id="m-title-lbl">📝 事項名稱</label><input type="text" id="m-title" class="field" placeholder="例如：看醫生"/></div>
+      <!-- Medication extra fields -->
+      <div id="m-dose-wrap" style="display:none;"><label class="lbl">💊 劑量</label><input type="text" id="m-dose" class="field" placeholder="例如：1 顆"/></div>
+      <div id="m-freq-wrap" style="display:none;"><label class="lbl">🔁 頻率</label>
+        <select id="m-freq" class="field">
+          <option value="daily">每天</option>
+          <option value="weekly">每週</option>
+          <option value="once">單次</option>
+        </select>
+      </div>
+      <div id="m-place-wrap"><label class="lbl">📍 地點（選填）</label><input type="text" id="m-place" class="field" placeholder="例如：仁愛醫院"/></div>
+      <div><label class="lbl">📌 備註（選填）</label><textarea id="m-note" class="field" rows="2" placeholder="其他說明…" style="resize:none;"></textarea></div>
+      <!-- Notification toggle -->
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--c-surface-mid);padding:.875rem 1rem;border-radius:1rem;">
+        <div style="display:flex;align-items:center;gap:.5rem;"><span class="mi sm" style="color:var(--c-primary);">notifications_active</span><span style="font-weight:700;font-size:.95rem;">提醒通知</span></div>
+        <label class="tog"><input type="checkbox" id="m-notif" checked/><div class="tog-track"></div><div class="tog-thumb"></div></label>
+      </div>
+    </div>
+    <div style="display:flex;gap:.75rem;margin-top:1.25rem;">
+      <button class="btn btn-s" style="flex:1;padding:.875rem;" onclick="closeModal()">取消</button>
+      <button class="btn btn-p" style="flex:2;padding:.875rem;" onclick="saveItem()"><span class="mi sm">save</span>儲存</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Install banner -->
+<div id="install-banner">
+  <span class="mi" style="flex-shrink:0;font-size:1.75rem;">install_mobile</span>
+  <div style="flex:1;"><div style="font-weight:900;">安裝到主畫面</div><div style="font-size:.82rem;opacity:.9;">可離線使用，就像原生 App</div></div>
+  <button onclick="installApp()" style="background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.4);border-radius:.875rem;padding:.5rem .875rem;color:#fff;font-weight:900;cursor:pointer;font-size:.88rem;">安裝</button>
+  <button onclick="document.getElementById('install-banner').classList.remove('show');" style="background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;"><span class="mi sm">close</span></button>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+'use strict';
+/* ═══════════════════════════════════════════════════
+   STATE  (persisted to localStorage)
+═══════════════════════════════════════════════════ */
+const STORE_KEY = 'shijian_v2';
+const DEFAULT_STATE = {
+  name: '', apiKey: '', lang: 'zh',
+  fontSize: 18, msgFontSize: 16, highContrast: false,
+  reminders: [
+    {id:1,type:'reminder',date:'2026-04-01',time:'14:30',title:'看醫生 (定期檢查)',place:'仁愛醫院',dose:'',freq:'once',note:'',done:false,notif:true,icon:'medical_services'},
+    {id:2,type:'reminder',date:'2026-04-05',time:'09:00',title:'與老友記飲茶',place:'金龍大酒樓',dose:'',freq:'once',note:'',done:false,notif:true,icon:'group'},
+    {id:3,type:'reminder',date:'2026-04-10',time:'16:00',title:'購買日常藥品',place:'社區藥房',dose:'',freq:'once',note:'',done:false,notif:true,icon:'shopping_basket'},
+  ],
+  medications: [
+    {id:10,type:'medication',date:'',time:'08:30',title:'阿斯匹靈 (Aspirin)',place:'',dose:'1 顆',freq:'daily',note:'飯後服用',done:false,notif:true,icon:'medication'},
+    {id:11,type:'medication',date:'',time:'12:30',title:'降血壓藥 (Valsartan)',place:'',dose:'1 顆',freq:'daily',note:'',done:false,notif:true,icon:'medication'},
+    {id:12,type:'medication',date:'',time:'21:00',title:'助眠藥物',place:'',dose:'0.5 顆',freq:'daily',note:'',done:false,notif:true,icon:'pill'},
+  ],
+  quickNote: '', weatherCache: null, weatherCity: ''
+};
+
+let S = JSON.parse(JSON.stringify(DEFAULT_STATE));
+let nextId = 100;
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw){ S = Object.assign({}, DEFAULT_STATE, JSON.parse(raw)); }
+    // Find max id
+    const allItems = [...(S.reminders||[]), ...(S.medications||[])];
+    if(allItems.length) nextId = Math.max(...allItems.map(x=>x.id)) + 1;
+  }catch(e){ console.warn('loadState error',e); }
+}
+
+function saveState(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }
+  catch(e){ console.warn('saveState error',e); }
+}
+
+function applyState(){
+  // Font sizes
+  document.documentElement.style.setProperty('--fs', S.fontSize + 'px');
+  document.documentElement.style.setProperty('--msg-fs', S.msgFontSize + 'px');
+  // High contrast
+  document.body.style.filter = S.highContrast ? 'contrast(1.15)' : '';
+  // Quick note
+  const qn = document.getElementById('quick-note');
+  if(qn && S.quickNote !== undefined) qn.value = S.quickNote;
+  // Name input
+  const ni = document.getElementById('name-input');
+  if(ni) ni.value = S.name || '';
+  // API key input
+  const ak = document.getElementById('api-key-input');
+  if(ak) ak.value = S.apiKey || '';
+  // Greeting
+  updateGreeting();
+  // Render lists
+  renderReminders();
+  renderMedications();
+  // Font slider sync
+  syncFontSlider();
+  // Notification status
+  updateNotifStatus();
+  // Nav badge
+  updateNavBadge();
+}
+
+/* ═══════════════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════════════ */
+let curScreen = 's-home', history = [];
+
+function goTo(id){
+  if(id === curScreen) return;
+  history.push(curScreen);
+  document.getElementById(curScreen).classList.remove('active');
+  document.getElementById(id).classList.add('active');
+  curScreen = id;
+  window.scrollTo(0,0);
+  // Screen-specific init
+  if(id === 's-weather') initWeatherScreen();
+  if(id === 's-calendar') initCalendar();
+  if(id === 's-notif') renderNotifList();
+  if(id === 's-medication') updateMedGreeting();
+}
+
+function goBack(){
+  if(!history.length){ goTo('s-home'); return; }
+  const prev = history.pop();
+  document.getElementById(curScreen).classList.remove('active');
+  document.getElementById(prev).classList.add('active');
+  curScreen = prev;
+}
+
+/* ═══════════════════════════════════════════════════
+   CLOCK
+═══════════════════════════════════════════════════ */
+const WDAYS = ['日','一','二','三','四','五','六'];
+const LDAYS = ['初一','初二','初三','初四','初五','初六','初七','初八','初九','初十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十','廿一','廿二','廿三','廿四','廿五','廿六','廿七','廿八','廿九','三十'];
+// Approximate lunar offset (simplified, not a full calculator)
+function approxLunarDay(d){ return LDAYS[((d+5)%30)]; }
+
+function updateClock(){
+  const n = new Date();
+  const y = n.getFullYear(), mo = n.getMonth()+1, d = n.getDate();
+  const h = n.getHours(), mi = n.getMinutes();
+  const ampm = h < 12 ? '上午' : '下午';
+  const h12 = h%12 || 12;
+
+  const dtEl = document.getElementById('date-text');
+  if(dtEl) dtEl.textContent = `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+
+  const ttEl = document.getElementById('time-text');
+  if(ttEl) ttEl.textContent = `${h12}:${String(mi).padStart(2,'0')}`;
+
+  const alEl = document.getElementById('ampm-lbl');
+  if(alEl) alEl.textContent = ampm;
+
+  const diEl = document.getElementById('day-inner');
+  if(diEl) diEl.textContent = `星期${WDAYS[n.getDay()]} · 農曆${approxLunarDay(d)}`;
+}
+
+function onClockSlider(v){
+  const sl = document.getElementById('dt-slider');
+  if(sl) sl.style.setProperty('--val', v+'%');
+  const p = v/100;
+  const dt = document.getElementById('date-text');
+  const tt = document.getElementById('time-text');
+  const al = document.getElementById('ampm-lbl');
+  if(dt) dt.style.fontSize = (1.4 - p*.35) + 'rem';
+  if(tt) tt.style.fontSize = (1.8 + p*2) + 'rem';
+  if(al) al.style.fontSize = (1.1 + p*.9) + 'rem';
+}
+
+/* ═══════════════════════════════════════════════════
+   GREETING
+═══════════════════════════════════════════════════ */
+function updateGreeting(){
+  const h = new Date().getHours();
+  const name = S.name ? `，${S.name}` : '';
+  let greeting;
+  if(h < 12) greeting = `早安${name}，<br>祝您今天好心情！`;
+  else if(h < 17) greeting = `午安${name}，<br>保持心情愉快！`;
+  else greeting = `晚安${name}，<br>今天辛苦了！`;
+  const el = document.getElementById('home-greeting');
+  if(el) el.innerHTML = greeting;
+}
+
+/* ═══════════════════════════════════════════════════
+   FONT SIZE
+═══════════════════════════════════════════════════ */
+const FONT_SIZES = {1:14,2:16,3:19,4:24};
+const FONT_NAMES = {1:'標準',2:'較大',3:'超大',4:'巨大'};
+
+function fontInc(){ if(S.fontSize < 26){ S.fontSize += 2; applyState(); saveState(); } }
+function fontDec(){ if(S.fontSize > 14){ S.fontSize -= 2; applyState(); saveState(); } }
+function msgFontInc(){ if(S.msgFontSize < 28){ S.msgFontSize += 2; applyState(); saveState(); toast('輸入字體已放大'); } }
+function msgFontDec(){ if(S.msgFontSize > 12){ S.msgFontSize -= 2; applyState(); saveState(); toast('輸入字體已縮小'); } }
+
+function onFontRange(v){
+  S.fontSize = FONT_SIZES[v] || 19;
+  applyState(); saveState();
+}
+
+function syncFontSlider(){
+  const sl = document.getElementById('font-range');
+  const lb = document.getElementById('font-lbl');
+  if(!sl) return;
+  const mapped = Math.round(1 + (S.fontSize - 14) / (26 - 14) * 3);
+  const v = Math.min(4, Math.max(1, mapped));
+  sl.value = v;
+  const prog = {1:'0%',2:'33%',3:'66%',4:'100%'};
+  sl.style.setProperty('--prog', prog[v] || '66%');
+  if(lb) lb.textContent = FONT_NAMES[v] || '超大';
+}
+
+/* ═══════════════════════════════════════════════════
+   WEATHER  (OpenWeatherMap)
+═══════════════════════════════════════════════════ */
+const OW_BASE = 'https://api.openweathermap.org/data/2.5/';
+const WEATHER_TTL = 10 * 60 * 1000; // 10 min cache
+
+const WI_MAP = {
+  '01d':'wb_sunny','01n':'dark_mode',
+  '02d':'partly_cloudy_day','02n':'partly_cloudy_night',
+  '03d':'cloud','03n':'cloud','04d':'cloud','04n':'cloud',
+  '09d':'rainy','09n':'rainy','10d':'rainy','10n':'rainy',
+  '11d':'thunderstorm','11n':'thunderstorm',
+  '13d':'ac_unit','13n':'ac_unit',
+  '50d':'foggy','50n':'foggy'
+};
+
+function initWeatherScreen(){
+  // Use cache if fresh
+  if(S.weatherCache && (Date.now() - S.weatherCache.ts) < WEATHER_TTL){
+    renderWeather(S.weatherCache);
+    return;
+  }
+  // Restore last city if any
+  const ci = document.getElementById('city-input');
+  if(ci && S.weatherCity) ci.value = S.weatherCity;
+  fetchWeather(false);
+}
+
+function fetchWeather(forceGeo){
+  if(!S.apiKey){ showWeatherError('請先在「設定」中填入 OpenWeather API 金鑰'); return; }
+  // Try geolocation if forced or no cached city
+  if(forceGeo || !S.weatherCity){
+    if(navigator.geolocation){
+      showWeatherLoading();
+      navigator.geolocation.getCurrentPosition(
+        pos => fetchWeatherByCoords(pos.coords.latitude, pos.coords.longitude),
+        () => { if(S.weatherCity) fetchWeatherByCity(); else showWeatherError('無法取得位置，請輸入城市名稱'); }
+      );
+    } else { showWeatherError('您的瀏覽器不支援定位功能'); }
+  } else {
+    fetchWeatherByCity();
+  }
+}
+
+function fetchWeatherByCity(){
+  const ci = document.getElementById('city-input');
+  const city = (ci && ci.value.trim()) || S.weatherCity;
+  if(!city){ showWeatherError('請輸入城市名稱'); return; }
+  if(!S.apiKey){ showWeatherError('請先在設定中填入 API 金鑰'); return; }
+  showWeatherLoading();
+  const url = `${OW_BASE}weather?q=${encodeURIComponent(city)}&appid=${S.apiKey}&units=metric&lang=zh_tw`;
+  fetchWeatherURL(url);
+  S.weatherCity = city;
+  if(ci) ci.value = city;
+}
+
+function fetchWeatherByCoords(lat, lon){
+  const url = `${OW_BASE}weather?lat=${lat}&lon=${lon}&appid=${S.apiKey}&units=metric&lang=zh_tw`;
+  fetchWeatherURL(url, lat, lon);
+}
+
+async function fetchWeatherURL(url, lat, lon){
+  try{
+    const res = await fetch(url);
+    if(!res.ok){ showWeatherError(`API 錯誤 ${res.status}：${res.status === 401 ? 'API 金鑰無效' : res.status === 404 ? '找不到此城市' : '請稍後再試'}`); return; }
+    const data = await res.json();
+    // Fetch forecast
+    let fUrl = lat != null
+      ? `${OW_BASE}forecast?lat=${lat}&lon=${lon}&appid=${S.apiKey}&units=metric&lang=zh_tw&cnt=15`
+      : `${OW_BASE}forecast?q=${encodeURIComponent(data.name)}&appid=${S.apiKey}&units=metric&lang=zh_tw&cnt=15`;
+    const fRes = await fetch(fUrl);
+    const fData = fRes.ok ? await fRes.json() : null;
+
+    const cache = buildWeatherCache(data, fData);
+    S.weatherCache = cache;
+    S.weatherCity = data.name;
+    saveState();
+    renderWeather(cache);
+  } catch(e){
+    showWeatherError('網路連線錯誤，請稍後再試');
+    console.error(e);
+  }
+}
+
+function buildWeatherCache(cur, fData){
+  const icon = cur.weather[0]?.icon || '01d';
+  // Group forecast by day
+  const forecastDays = [];
+  if(fData?.list){
+    const byDay = {};
+    fData.list.forEach(item => {
+      const d = item.dt_txt.split(' ')[0];
+      if(!byDay[d]) byDay[d] = [];
+      byDay[d].push(item);
+    });
+    const today = new Date().toISOString().split('T')[0];
+    Object.keys(byDay).filter(d => d !== today).slice(0,3).forEach(d => {
+      const items = byDay[d];
+      const temps = items.map(i => i.main.temp);
+      const midday = items.find(i => i.dt_txt.includes('12:00')) || items[Math.floor(items.length/2)];
+      forecastDays.push({
+        date: d,
+        min: Math.round(Math.min(...temps)),
+        max: Math.round(Math.max(...temps)),
+        desc: midday.weather[0]?.description || '',
+        icon: midday.weather[0]?.icon || '01d'
+      });
+    });
+  }
+  return {
+    ts: Date.now(),
+    city: cur.name + (cur.sys?.country ? `, ${cur.sys.country}` : ''),
+    temp: Math.round(cur.main.temp),
+    feelsLike: Math.round(cur.main.feels_like),
+    desc: cur.weather[0]?.description || '',
+    icon, humidity: cur.main.humidity,
+    wind: Math.round(cur.wind?.speed * 3.6),
+    vis: cur.visibility ? Math.round(cur.visibility/1000) : null,
+    forecast: forecastDays
+  };
+}
+
+function renderWeather(w){
+  document.getElementById('weather-loading').style.display = 'none';
+  document.getElementById('weather-error').style.display = 'none';
+  const wc = document.getElementById('weather-content');
+  wc.style.display = 'block';
+
+  document.getElementById('w-city').textContent = '今天 · ' + w.city;
+  document.getElementById('w-temp').textContent = w.temp;
+  document.getElementById('w-desc').textContent = w.desc;
+  document.getElementById('w-feels').textContent = `體感 ${w.feelsLike}°C`;
+  document.getElementById('w-humidity').textContent = w.humidity + '%';
+  document.getElementById('w-wind').textContent = w.wind + ' km/h';
+  document.getElementById('w-vis').textContent = w.vis != null ? w.vis + ' km' : 'N/A';
+  document.getElementById('w-icon').textContent = WI_MAP[w.icon] || 'wb_sunny';
+
+  // Forecast
+  const fd = document.getElementById('w-forecast');
+  fd.innerHTML = '';
+  const DAY_LABELS = ['明天','後天','大後天'];
+  (w.forecast||[]).forEach((d,i) => {
+    fd.innerHTML += `<div class="card" style="padding:.875rem 1.25rem;display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:.75rem;flex:1;">
+        <span style="font-size:1rem;font-weight:900;width:3rem;">${DAY_LABELS[i]||d.date}</span>
+        <span class="mi fill sm" style="color:var(--c-primary);">${WI_MAP[d.icon]||'cloud'}</span>
+        <span style="font-size:.9rem;font-weight:700;color:var(--c-on-surface-v);">${d.desc}</span>
+      </div>
+      <span style="font-size:1.05rem;font-weight:900;color:var(--c-primary);">${d.max}° / ${d.min}°</span>
+    </div>`;
+  });
+
+  // Health tip
+  let tip = '請注意防曬，補充足夠水分，保持健康！';
+  if(w.temp >= 35) tip = '今天高溫炎熱，請避免在正午時分外出，多補充水分。';
+  else if(w.temp < 10) tip = '今天氣溫偏低，請注意保暖，多加衣物外出。';
+  else if(w.humidity > 80) tip = '今天濕度較高，請攜帶雨具，謹防跌倒。';
+  else if(w.wind > 40) tip = '今天風力較強，外出時請小心，長者宜避免長時間戶外活動。';
+  document.getElementById('w-tip-text').textContent = tip;
+  document.getElementById('w-updated').textContent = `更新時間：${new Date(w.ts).toLocaleTimeString('zh-Hant',{hour:'2-digit',minute:'2-digit'})}`;
+}
+
+function showWeatherLoading(){
+  document.getElementById('weather-loading').style.display = 'flex';
+  document.getElementById('weather-error').style.display = 'none';
+  document.getElementById('weather-content').style.display = 'none';
+}
+
+function showWeatherError(msg){
+  document.getElementById('weather-loading').style.display = 'none';
+  document.getElementById('weather-error').style.display = 'block';
+  document.getElementById('weather-content').style.display = 'none';
+  document.getElementById('weather-error-msg').textContent = msg;
+}
+
+/* ═══════════════════════════════════════════════════
+   REMINDER & MEDICATION CRUD
+═══════════════════════════════════════════════════ */
+const BORDER_COLORS = ['#8B5000','#6F5D47','#FFB870','#7A5900','#524436','#BF7030'];
+
+function fmtDate(ds){
+  if(!ds) return '';
+  try{
+    const d = new Date(ds+'T00:00:00');
+    const now = new Date();
+    const today = new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    const diff = Math.round((d - today)/86400000);
+    if(diff === 0) return '今天';
+    if(diff === 1) return '明天';
+    if(diff === -1) return '昨天';
+    if(diff > 0 && diff < 8) return `本週${WDAYS[d.getDay()]}`;
+    return `${d.getMonth()+1}月${d.getDate()}日`;
+  }catch(e){ return ds; }
+}
+
+function buildItemCard(r, idx, listType){
+  const bc = BORDER_COLORS[idx % BORDER_COLORS.length];
+  const isMed = listType === 'medication';
+  const dateLabel = isMed ? (r.time || '') : fmtDate(r.date);
+  const subLine = isMed
+    ? [r.dose?`劑量：${r.dose}`:'', r.freq==='daily'?'每天':r.freq==='weekly'?'每週':'單次'].filter(Boolean).join('　')
+    : [r.time, r.place].filter(Boolean).join('　');
+  return `
+    <div class="card rem-card${r.done?' done':''}" id="item-${r.id}" style="padding:1.25rem;border-left:8px solid ${bc};">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem;">
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin-bottom:.5rem;">
+            <span class="mi fill sm" style="color:${bc};font-size:1.2rem;">${r.icon||'event_note'}</span>
+            <span style="font-size:.92rem;font-weight:900;color:${bc};">${dateLabel}</span>
+            ${isMed&&r.time?`<span style="background:var(--c-surface-mid);padding:.12rem .55rem;border-radius:999px;font-size:.8rem;font-weight:700;color:var(--c-on-surface-v);">${r.time}</span>`:''}
+          </div>
+          <div class="rem-title" style="font-size:1.3rem;font-weight:900;line-height:1.3;margin-bottom:${subLine?'.35rem':'0'};">${r.title}</div>
+          ${subLine?`<div style="font-size:.88rem;font-weight:700;color:var(--c-on-surface-v);">${subLine}</div>`:''}
+          ${r.note?`<div style="font-size:.82rem;font-weight:700;color:var(--c-outline);margin-top:.25rem;">${r.note}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.4rem;flex-shrink:0;">
+          <button style="width:2.2rem;height:2.2rem;border-radius:50%;background:var(--c-surface-mid);color:var(--c-primary);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="editItem(${r.id},'${listType}')" title="編輯">
+            <span class="mi sm" style="font-size:1.1rem;">edit</span>
+          </button>
+          <button style="width:2.2rem;height:2.2rem;border-radius:50%;background:var(--c-error-bg);color:var(--c-error);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="deleteItem(${r.id},'${listType}')" title="刪除">
+            <span class="mi sm" style="font-size:1.1rem;">close</span>
+          </button>
+        </div>
+      </div>
+      <button style="width:100%;margin-top:.875rem;padding:.875rem;border-radius:1.5rem;font-size:1rem;font-weight:900;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.5rem;background:${r.done?'var(--c-surface-highest)':'linear-gradient(135deg,#8B5000,#BF7030)'};color:${r.done?'var(--c-on-surface-v)':'white'};"
+        onclick="toggleDone(${r.id},'${listType}')">
+        <span class="mi sm fill">${r.done?'cancel':'check_circle'}</span>
+        ${r.done?'取消完成':'完成'}
+      </button>
+    </div>`;
+}
+
+function sortItems(arr){
+  return [...arr].sort((a,b)=>{
+    const da = new Date(((a.date||'2099-01-01')+'T'+(a.time||'00:00')));
+    const db = new Date(((b.date||'2099-01-01')+'T'+(b.time||'00:00')));
+    return da - db;
+  });
+}
+
+function renderReminders(){
+  const el = document.getElementById('rem-list');
+  if(!el) return;
+  const items = sortItems(S.reminders);
+  if(!items.length){
+    el.innerHTML = '<div style="text-align:center;padding:2.5rem;color:var(--c-outline);font-weight:700;">目前沒有提醒事項</div>';
+    return;
+  }
+  el.innerHTML = items.map((r,i) => buildItemCard(r,i,'reminder')).join('');
+}
+
+function renderMedications(){
+  const el = document.getElementById('med-list');
+  if(!el) return;
+  const items = sortItems(S.medications);
+  if(!items.length){
+    el.innerHTML = '<div style="text-align:center;padding:2.5rem;color:var(--c-outline);font-weight:700;">目前沒有服藥記錄</div>';
+    return;
+  }
+  el.innerHTML = items.map((r,i) => buildItemCard(r,i,'medication')).join('');
+  updateMedGreeting();
+}
+
+function toggleDone(id, listType){
+  const arr = listType === 'medication' ? S.medications : S.reminders;
+  const r = arr.find(x=>x.id===id);
+  if(!r) return;
+  r.done = !r.done;
+  saveState();
+  if(listType === 'medication') renderMedications();
+  else renderReminders();
+  toast(r.done ? '已標記為完成！' : '已取消完成');
+  updateNavBadge();
+}
+
+function deleteItem(id, listType){
+  if(!confirm('確定要刪除這條提醒嗎？')) return;
+  if(listType === 'medication') S.medications = S.medications.filter(x=>x.id!==id);
+  else S.reminders = S.reminders.filter(x=>x.id!==id);
+  saveState();
+  if(listType === 'medication') renderMedications();
+  else renderReminders();
+  toast('已刪除');
+  updateNavBadge();
+}
+
+function editItem(id, listType){
+  const arr = listType === 'medication' ? S.medications : S.reminders;
+  const r = arr.find(x=>x.id===id);
+  if(!r) return;
+  openItemModal(listType, r);
+}
+
+/* ═══════════════════════════════════════════════════
+   ITEM MODAL
+═══════════════════════════════════════════════════ */
+function openItemModal(listType, existing){
+  const modal = document.getElementById('item-modal');
+  const isMed = listType === 'medication';
+  document.getElementById('modal-mode').value = listType;
+  document.getElementById('modal-id').value = existing ? existing.id : '';
+
+  // Title
+  const titleEl = document.getElementById('modal-title');
+  titleEl.innerHTML = `<span class="mi sm" style="color:var(--c-primary);">${isMed?'medication':'event_note'}</span>${existing ? '編輯' : '新增'}${isMed ? '服藥提醒' : '提醒事項'}`;
+
+  // Show/hide fields
+  document.getElementById('m-dose-wrap').style.display = isMed ? 'block' : 'none';
+  document.getElementById('m-freq-wrap').style.display = isMed ? 'block' : 'none';
+  document.getElementById('m-place-wrap').style.display = isMed ? 'none' : 'block';
+  document.getElementById('m-title-lbl').textContent = isMed ? '💊 藥物名稱' : '📝 事項名稱';
+  document.getElementById('m-title').placeholder = isMed ? '例如：降血壓藥' : '例如：看醫生';
+
+  // Date: for medications, daily ones may not need a date
+  if(existing){
+    document.getElementById('m-date').value = existing.date || '';
+    document.getElementById('m-time').value = existing.time || '';
+    document.getElementById('m-title').value = existing.title || '';
+    document.getElementById('m-dose').value = existing.dose || '';
+    document.getElementById('m-freq').value = existing.freq || 'once';
+    document.getElementById('m-place').value = existing.place || '';
+    document.getElementById('m-note').value = existing.note || '';
+    document.getElementById('m-notif').checked = existing.notif !== false;
+  } else {
+    document.getElementById('m-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('m-time').value = '';
+    document.getElementById('m-title').value = '';
+    document.getElementById('m-dose').value = '';
+    document.getElementById('m-freq').value = isMed ? 'daily' : 'once';
+    document.getElementById('m-place').value = '';
+    document.getElementById('m-note').value = '';
+    document.getElementById('m-notif').checked = true;
+  }
+
+  modal.classList.add('open');
+  setTimeout(() => document.getElementById('m-title').focus(), 300);
+}
+
+function closeModal(){
+  document.getElementById('item-modal').classList.remove('open');
+}
+
+function saveItem(){
+  const listType = document.getElementById('modal-mode').value;
+  const existingId = document.getElementById('modal-id').value;
+  const title = document.getElementById('m-title').value.trim();
+  if(!title){ toast('請填寫名稱'); return; }
+
+  const isMed = listType === 'medication';
+  const item = {
+    id: existingId ? parseInt(existingId) : nextId++,
+    type: listType,
+    date: document.getElementById('m-date').value,
+    time: document.getElementById('m-time').value,
+    title,
+    dose: isMed ? document.getElementById('m-dose').value.trim() : '',
+    freq: isMed ? document.getElementById('m-freq').value : 'once',
+    place: !isMed ? document.getElementById('m-place').value.trim() : '',
+    note: document.getElementById('m-note').value.trim(),
+    done: false,
+    notif: document.getElementById('m-notif').checked,
+    icon: isMed ? 'medication' : 'event_note'
+  };
+
+  if(existingId){
+    // Preserve done status when editing
+    const arr = isMed ? S.medications : S.reminders;
+    const orig = arr.find(x=>x.id===item.id);
+    if(orig) item.done = orig.done;
+    if(isMed) S.medications = S.medications.map(x=>x.id===item.id?item:x);
+    else S.reminders = S.reminders.map(x=>x.id===item.id?item:x);
+    toast('已儲存修改！');
+  } else {
+    if(isMed) S.medications.push(item);
+    else S.reminders.push(item);
+    toast('已新增！');
+  }
+
+  saveState();
+  closeModal();
+  if(isMed) renderMedications();
+  else renderReminders();
+  updateNavBadge();
+
+  // Schedule notification
+  if(item.notif && item.date && item.time) scheduleNotification(item);
+}
+
+/* ═══════════════════════════════════════════════════
+   MEDICATION SCREEN
+═══════════════════════════════════════════════════ */
+function updateMedGreeting(){
+  const h = new Date().getHours();
+  let greeting = '早安', icon = 'wb_sunny', iconColor = '#FFA000';
+  if(h >= 12 && h < 17){ greeting = '午安'; icon = 'wb_twilight'; iconColor = '#FF8C00'; }
+  else if(h >= 17){ greeting = '晚安'; icon = 'dark_mode'; iconColor = '#5C6BC0'; }
+  const name = S.name ? `，${S.name}` : '';
+  const el = document.getElementById('med-greeting');
+  if(el) el.textContent = `${greeting}${name}`;
+  const iconEl = document.getElementById('tod-icon');
+  if(iconEl){ iconEl.textContent = icon; iconEl.style.color = iconColor; }
+  // Count pending
+  const pending = S.medications.filter(m => !m.done).length;
+  const cEl = document.getElementById('med-count');
+  if(cEl) cEl.textContent = pending > 0 ? `今天還有 ${pending} 組藥物需要服用` : '今天的藥物已全部完成！';
+}
+
+function setTOD(tod, btn){
+  document.querySelectorAll('.chrono-btn').forEach(b => {
+    b.style.background = 'none'; b.style.boxShadow = 'none';
+    const ic = b.querySelector('.mi'); if(ic){ ic.style.color = 'var(--c-outline)'; ic.classList.remove('fill'); }
+  });
+  btn.style.background = '#fff'; btn.style.boxShadow = '0 2px 6px rgba(0,0,0,.1)';
+  const ic = btn.querySelector('.mi');
+  if(ic){ ic.classList.add('fill'); const c = {morning:'#FFA000',afternoon:'#FF8C00',evening:'#5C6BC0'}; ic.style.color = c[tod]; }
+}
+
+/* ═══════════════════════════════════════════════════
+   SETTINGS
+═══════════════════════════════════════════════════ */
+function saveApiKey(){
+  S.apiKey = document.getElementById('api-key-input').value.trim();
+  saveState();
+  toast('API 金鑰已儲存！');
+}
+
+function saveName(){
+  S.name = document.getElementById('name-input').value.trim();
+  saveState();
+  updateGreeting();
+  updateMedGreeting();
+  toast('稱呼已儲存！');
+}
+
+function selLang(btn, lang){
+  document.querySelectorAll('.lang-opt').forEach(b => {
+    b.style.borderColor = 'transparent'; b.style.background = 'var(--c-surface-low)'; b.style.color = 'var(--c-on-surface)';
+    const c = b.querySelector('.mi'); if(c) c.remove();
+  });
+  btn.style.borderColor = 'var(--c-primary)'; btn.style.background = '#fff'; btn.style.color = 'var(--c-primary)';
+  const c = document.createElement('span'); c.className = 'mi fill sm'; c.style.color = 'var(--c-primary)'; c.textContent = 'check_circle'; btn.appendChild(c);
+  S.lang = lang; saveState();
+}
+
+function toggleContrast(btn){
+  S.highContrast = !S.highContrast;
+  const sp = btn.querySelector('span:first-child'), ic = btn.querySelector('.mi');
+  if(S.highContrast){ sp.textContent = '已開啟'; ic.textContent = 'toggle_on'; ic.classList.add('fill'); }
+  else { sp.textContent = '立即開啟'; ic.textContent = 'toggle_off'; ic.classList.remove('fill'); }
+  applyState(); saveState();
+  toast(S.highContrast ? '高對比度已開啟' : '高對比度已關閉');
+}
+
+function saveSettings(){
+  S.apiKey = (document.getElementById('api-key-input').value||'').trim();
+  S.name = (document.getElementById('name-input').value||'').trim();
+  saveState(); applyState();
+  toast('設定已儲存！');
+  setTimeout(() => goTo('s-home'), 700);
+}
+
+function confirmClear(){
+  if(confirm('確定要清除所有資料嗎？此操作無法復原。')){
+    localStorage.removeItem(STORE_KEY);
+    S = JSON.parse(JSON.stringify(DEFAULT_STATE));
+    applyState(); saveState();
+    toast('已清除所有資料');
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   NOTIFICATIONS
+═══════════════════════════════════════════════════ */
+async function requestNotifPerm(){
+  if(!('Notification' in window)){ toast('此瀏覽器不支援通知功能'); return; }
+  const result = await Notification.requestPermission();
+  updateNotifStatus();
+  if(result === 'granted'){
+    toast('通知已開啟！');
+    // Schedule all pending
+    [...S.reminders, ...S.medications].forEach(r => { if(r.notif && !r.done && r.date && r.time) scheduleNotification(r); });
+  } else { toast('通知已被拒絕'); }
+}
+
+function updateNotifStatus(){
+  const el = document.getElementById('notif-status');
+  if(!el) return;
+  if(!('Notification' in window)){ el.textContent = '此瀏覽器不支援通知'; return; }
+  const s = Notification.permission;
+  el.textContent = s === 'granted' ? '✅ 通知已開啟' : s === 'denied' ? '❌ 通知已被封鎖（請從瀏覽器設定中開啟）' : '⚠️ 尚未設定通知權限';
+}
+
+function scheduleNotification(item){
+  if(Notification.permission !== 'granted') return;
+  if(!item.date || !item.time) return;
+  const ts = new Date(item.date + 'T' + item.time).getTime();
+  if(ts <= Date.now()) return;
+  if(navigator.serviceWorker?.controller){
+    navigator.serviceWorker.controller.postMessage({
+      type: 'SCHEDULE_NOTIFICATION',
+      id: item.id,
+      title: item.title,
+      body: [item.dose, item.place, item.note].filter(Boolean).join(' · ') || '時間到了！',
+      timestamp: ts
+    });
+  }
+}
+
+function updateNavBadge(){
+  const upcoming = [...S.reminders, ...S.medications].filter(r => {
+    if(r.done) return false;
+    if(!r.date && !r.time) return false;
+    const now = new Date();
+    const itemDate = r.date ? new Date(r.date+'T'+(r.time||'00:00')) : null;
+    if(itemDate && itemDate < now) return false;
+    // Show if within 24h
+    if(itemDate && (itemDate - now) < 86400000) return true;
+    return false;
+  });
+  const badge = document.getElementById('notif-badge');
+  if(badge){ badge.style.display = upcoming.length ? 'flex' : 'none'; badge.textContent = upcoming.length > 9 ? '9+' : upcoming.length; }
+}
+
+/* ═══════════════════════════════════════════════════
+   NOTIFICATIONS LIST
+═══════════════════════════════════════════════════ */
+function renderNotifList(){
+  const el = document.getElementById('notif-list');
+  if(!el) return;
+  const now = new Date();
+  const all = sortItems([...S.reminders, ...S.medications]).filter(r => !r.done);
+  if(!all.length){ el.innerHTML = '<div style="text-align:center;padding:2.5rem;color:var(--c-outline);font-weight:700;">目前沒有提醒</div>'; return; }
+  el.innerHTML = all.map(r => {
+    const dt = r.date ? new Date(r.date+'T'+(r.time||'00:00')) : null;
+    const isPast = dt && dt < now;
+    const timeStr = dt ? dt.toLocaleString('zh-Hant',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}) : (r.time||'');
+    return `<div class="card" style="padding:1rem 1.25rem;margin-bottom:.75rem;display:flex;align-items:center;gap:.875rem;${isPast?'opacity:.5':''}">
+      <span class="mi fill sm" style="color:var(--c-primary);flex-shrink:0;">${r.icon||'event_note'}</span>
+      <div style="flex:1;"><div style="font-size:1rem;font-weight:900;">${r.title}</div><div style="font-size:.85rem;font-weight:700;color:var(--c-on-surface-v);">${timeStr}${isPast?' (已過期)':''}</div></div>
+      <button style="background:none;border:none;cursor:pointer;color:var(--c-error);" onclick="deleteItem(${r.id},'${r.type}');renderNotifList()"><span class="mi sm">delete</span></button>
+    </div>`;
+  }).join('');
+}
+
+function clearAllNotifs(){
+  if(!confirm('確定要清除所有提醒嗎？')) return;
+  S.reminders = []; S.medications = [];
+  saveState(); renderNotifList(); renderReminders(); renderMedications(); updateNavBadge();
+  toast('已清除所有提醒');
+}
+
+/* ═══════════════════════════════════════════════════
+   QUICK NOTE
+═══════════════════════════════════════════════════ */
+function saveQuickNote(){
+  const txt = document.getElementById('quick-note').value.trim();
+  if(!txt){ toast('請先輸入內容'); return; }
+  const now = new Date();
+  S.reminders.push({ id:nextId++, type:'reminder', date:now.toISOString().split('T')[0], time:'', title:txt, place:'', dose:'', freq:'once', note:'', done:false, notif:false, icon:'edit_note' });
+  saveState(); renderReminders();
+  S.quickNote = ''; document.getElementById('quick-note').value = '';
+  toast('已加入提醒清單！');
+  updateNavBadge();
+}
+
+/* ═══════════════════════════════════════════════════
+   CALENDAR
+═══════════════════════════════════════════════════ */
+const HOLIDAYS_2025 = {
+  '2025-01-01':'元旦','2025-01-28':'除夕','2025-01-29':'春節初一','2025-01-30':'春節初二','2025-01-31':'春節初三',
+  '2025-02-28':'228紀念日','2025-04-04':'清明節','2025-05-01':'勞動節','2025-05-13':'佛誕',
+  '2025-05-31':'端午節','2025-10-01':'國慶','2025-10-06':'中秋節','2025-10-29':'重陽節',
+  '2025-12-22':'冬至','2025-12-25':'聖誕節'
+};
+
+function initCalendar(){
+  const n = new Date();
+  const todayBox = document.getElementById('cal-today-box');
+  if(todayBox){
+    todayBox.innerHTML = `<p style="font-size:1.1rem;font-weight:900;color:#003396;">今日：${n.getMonth()+1}月${n.getDate()}日 星期${WDAYS[n.getDay()]}</p><p style="color:#434654;font-weight:700;">農曆：${approxLunarDay(n.getDate())}</p>`;
+  }
+  buildCalendars();
+}
+
+function buildCalendars(){
+  const el = document.getElementById('cal-months');
+  if(!el) return;
+  const months = [1,2,3,4,5,6,7,8,9,10,11,12];
+  el.innerHTML = months.map(m => buildMonthCalendar(2025, m)).join('');
+}
+
+function buildMonthCalendar(year, month){
+  const monthNames = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+  const enNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const firstDay = new Date(year, month-1, 1).getDay();
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const today = new Date(); const isCurrentMonth = today.getFullYear()===year && today.getMonth()+1===month;
+
+  let cells = '';
+  // Header
+  cells += ['日','一','二','三','四','五','六'].map((d,i) =>
+    `<div style="font-weight:900;font-size:.82rem;padding:.25rem 0;text-align:center;color:${i===0?'#80000b':i===6?'#003396':'inherit'};">${d}</div>`
+  ).join('');
+  // Empty cells
+  for(let i=0;i<firstDay;i++) cells += '<div></div>';
+  // Days
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const holiday = HOLIDAYS_2025[dateStr];
+    const dow = new Date(year,month-1,d).getDay();
+    const isToday = isCurrentMonth && d===today.getDate();
+    let cls = 'cal-cell'; let style = '';
+    if(isToday) cls += ' cal-today';
+    else if(holiday) cls += ['元旦','農曆新年','春節初一','春節初二','春節初三','除夕'].includes(holiday) ? ' cal-hday' : ' cal-pday';
+    else if(dow===0) style = 'color:#80000b;';
+    else if(dow===6) style = 'color:#003396;';
+    cells += `<div class="${cls}" style="${style}" title="${holiday||''}">
+      <span style="display:block;font-weight:900;">${d}</span>
+      ${holiday?`<span class="hbadge">${holiday.length>3?holiday.slice(0,3):holiday}</span>`:''}
+    </div>`;
+  }
+
+  const borderStyle = isCurrentMonth ? 'border:3px solid #003396;box-shadow:0 8px 28px rgba(0,51,150,.12);' : 'border:2px solid rgba(0,51,150,.1);';
+  return `<div style="background:white;border-radius:2rem;padding:1.25rem;${borderStyle}margin-bottom:1.25rem;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.875rem;">
+      <div style="display:flex;align-items:baseline;gap:.5rem;">
+        <span style="font-size:1.75rem;font-weight:900;color:${isCurrentMonth?'#003396':'inherit'};">${monthNames[month-1]}</span>
+        <span style="color:#434654;font-weight:700;font-size:.9rem;">${enNames[month-1]}</span>
+      </div>
+      ${isCurrentMonth?'<span style="background:#003396;color:white;padding:.25rem .875rem;border-radius:999px;font-size:.82rem;font-weight:900;">本月</span>':''}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:.2rem;">${cells}</div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════════════════════
+   PWA INSTALL
+═══════════════════════════════════════════════════ */
+let deferredInstall = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredInstall = e;
+  document.getElementById('install-banner').classList.add('show');
+});
+function installApp(){
+  if(!deferredInstall) return;
+  deferredInstall.prompt();
+  deferredInstall.userChoice.then(() => {
+    deferredInstall = null;
+    document.getElementById('install-banner').classList.remove('show');
+  });
+}
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-banner').classList.remove('show');
+  toast('App 已安裝成功！');
+});
+
+/* ═══════════════════════════════════════════════════
+   SERVICE WORKER
+═══════════════════════════════════════════════════ */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      console.log('[SW] registered', reg.scope);
+    }).catch(err => console.warn('[SW] registration failed', err));
+  });
+}
+
+/* ═══════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════ */
+let toastTimer;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block'; t.style.opacity = '1';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    t.style.opacity = '0';
+    setTimeout(() => { t.style.display = 'none'; t.style.opacity = '1'; }, 350);
+  }, 2400);
+}
+
+/* ═══════════════════════════════════════════════════
+   MODAL OVERLAY CLOSE
+═══════════════════════════════════════════════════ */
+document.getElementById('item-modal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+
+/* ═══════════════════════════════════════════════════
+   AUTO-SAVE QUICK NOTE ON INPUT
+═══════════════════════════════════════════════════ */
+document.getElementById('quick-note').addEventListener('input', function(){
+  S.quickNote = this.value; saveState();
+});
+
+/* ═══════════════════════════════════════════════════
+   HANDLE URL HASH
+═══════════════════════════════════════════════════ */
+function handleHash(){
+  const map = {'#weather':'s-weather','#reminders':'s-reminders','#medication':'s-medication'};
+  const target = map[location.hash];
+  if(target) goTo(target);
+}
+
+/* ═══════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════ */
+loadState();
+applyState();
+updateClock(); setInterval(updateClock, 1000);
+document.getElementById('dt-slider').style.setProperty('--val','50%');
+handleHash();
+
+// Auto-refresh greeting every minute
+setInterval(updateGreeting, 60000);
+setInterval(updateNavBadge, 60000);
+
+// Re-schedule notifications on load
+if(Notification.permission === 'granted'){
+  [...S.reminders, ...S.medications].forEach(r => {
+    if(r.notif && !r.done && r.date && r.time) scheduleNotification(r);
+  });
+}
+
+console.log('時間助手 PWA ready ✓');
+</script>
+</body>
+</html>

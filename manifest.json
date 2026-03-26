@@ -1,0 +1,31 @@
+{
+  "name": "時間助手 — 長青生活助理",
+  "short_name": "時間助手",
+  "description": "為長者設計的智能生活助手 — 天氣、提醒、服藥管理",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#FFFBF7",
+  "theme_color": "#8B5000",
+  "orientation": "portrait",
+  "lang": "zh-Hant",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%238B5000'/%3E%3Ctext x='96' y='130' font-size='110' text-anchor='middle' fill='white'%3E⏰%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%238B5000'/%3E%3Ctext x='256' y='340' font-size='280' text-anchor='middle' fill='white'%3E⏰%3C/text%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "lifestyle", "utilities"],
+  "shortcuts": [
+    { "name": "天氣", "url": "./index.html#weather", "description": "查詢天氣" },
+    { "name": "提醒", "url": "./index.html#reminders", "description": "未來提醒" },
+    { "name": "藥物", "url": "./index.html#medication", "description": "服藥管理" }
+  ]
+}
